@@ -39,9 +39,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
             
             Long id = jwtUtil.extractId(token);
-            
+
             com.pianomastr64.usermanagement.user.User user = repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElse(null);
+            if (user == null) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User not found");
+                return;
+            }
             
             UserDetails userDetails = User
                 .withUsername(id.toString())
