@@ -17,7 +17,7 @@ public class User {
     private String email;
     
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    @Column(name = "password_hash", nullable = false)
+    @Column(nullable = false)
     private String passwordHash;
     
     @Enumerated(EnumType.STRING)
