@@ -16,7 +16,6 @@ public record UserInputDTO(
     @NotNull(groups = OnCreate.class)
     @NotBlankIfPresent
     @Email
-    //TODO: consider custom validator for unique email
     String email,
     
     @NotNull(groups = OnCreate.class)

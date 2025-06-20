@@ -59,6 +59,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body("Malformed JSON request");
     }
     
+    @ExceptionHandler(DuplicateEmailException.class)
+    public ResponseEntity<Map<String, String>> handle(DuplicateEmailException exception) {
+        System.err.println("DuplicateEmailException occurred:");
+        System.err.println("\t" + exception.getMessage());
+        
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+            .body(Map.of("error", exception.getMessage()));
+    }
+    
     // Catch all for any other exceptions for development purposes
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handle(Exception exception) throws Exception {
