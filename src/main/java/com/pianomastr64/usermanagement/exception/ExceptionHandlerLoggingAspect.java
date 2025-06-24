@@ -1,6 +1,7 @@
 package com.pianomastr64.usermanagement.exception;
 
 import com.pianomastr64.usermanagement.user.UserRepository;
+import jakarta.validation.ConstraintViolationException;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -55,14 +57,28 @@ public class ExceptionHandlerLoggingAspect {
                 }
             } catch(Exception ignored) {}
             
+            String summary = switch(ex) {
+                case MethodArgumentNotValidException e -> e.getBindingResult().getFieldErrors().stream()
+                    .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
+                    .reduce((msg1, msg2) -> msg1 + "; " + msg2)
+                    .orElse("Validation failed");
+                case ConstraintViolationException e -> e.getConstraintViolations().stream()
+                    .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
+                    .reduce((msg1, msg2) -> msg1 + "; " + msg2)
+                    .orElse("Constraint violations");
+                default -> "N/A";
+            };
+            
             logger.warn("""
                     Exception handled: {}: {}
-                    \tRequest: {} {}
-                    \tUser: {}
+                        Request: {} {}
+                        User: {}
+                        Summary: "{}"\
                     """,
                 ex.getClass().getSimpleName(), ex.getMessage(),
                 httpMethod, path,
-                user);
+                user,
+                summary);
             
             if(result instanceof ResponseEntity<?> responseEntity) {
                 if(responseEntity.getStatusCode().is5xxServerError()) {
