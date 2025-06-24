@@ -24,6 +24,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
     private final JwtUtil jwtUtil;
     
+    private static final String[] SWAGGER_ENDPOINTS = {
+        "/v3/api-docs/**",
+        "/swagger-ui.html",
+        "/swagger-ui/**",
+        "/swagger-resources/**",
+        "/webjars/**"
+    };
+    
     public SecurityConfig(JwtUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
     }
@@ -34,6 +42,7 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/login", "/auth/register", "/h2-console/**").permitAll()
+                .requestMatchers(SWAGGER_ENDPOINTS).permitAll() //disabled in prod profile
                 // TODO add /admin/ endpoints in the future
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/users/**").authenticated()
