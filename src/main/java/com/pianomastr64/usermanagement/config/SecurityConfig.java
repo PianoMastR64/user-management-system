@@ -49,7 +49,7 @@ public class SecurityConfig {
                     ErrorResponseUtil.writeJsonError(
                         response,
                         HttpServletResponse.SC_FORBIDDEN,
-                        "Access denied. You do not have permission to access this resource."))
+                        "Access denied. You do not have permission to access " + request.getRequestURI() + "."))
             )
             // to allow H2 console to work
             .headers(headers -> headers
