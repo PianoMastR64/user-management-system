@@ -13,6 +13,8 @@ public class User {
     @Column(nullable = false)
     private String name;
     
+    // Only available with Liquibase Pro, so constraints are defined in SQL in liquibase changelog
+//    @org.hibernate.annotations.Check(constraints = "trim(email) <> ''")
     @Column(unique = true, nullable = false)
     private String email;
     

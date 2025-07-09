@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1750278193995-2
+      author: Piano
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+#        This method, including auto-generated changelog with @Check is only available with Liquibase Pro
+#                see https://docs.liquibase.com/change-types/add-check-constraint.html
+#        - addCheckConstraint:
+#            tableName: users
+#            constraintName: chk_users_email_nonblank
+#            constraintBody: "trim(email) <> ''"
+#       So we use the SQL method instead
+        - sql:
+            sql: "ALTER TABLE users ADD CONSTRAINT chk_users_email_nonblank CHECK (trim(email) <> '')"
