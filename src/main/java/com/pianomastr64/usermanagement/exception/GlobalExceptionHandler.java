@@ -1,66 +1,103 @@
 package com.pianomastr64.usermanagement.exception;
 
-import org.springframework.dao.DuplicateKeyException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-
 import jakarta.validation.ConstraintViolationException;
-import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.http.*;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @RestControllerAdvice
-public class GlobalExceptionHandler {
+public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<Map<String, String>> handle(ConstraintViolationException exception) {
-        Map<String, String> errors = new HashMap<>();
+    @Override
+    @Nullable
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+        MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request
+    ) {
+        List<ValidationError> errors = ex.getBindingResult().getFieldErrors().stream()
+            .sorted(Comparator.comparing(fieldError -> fieldError.getField().toLowerCase()))
+            .map(fieldError -> new ValidationError(
+                fieldError.getField(),
+                fieldError.getDefaultMessage() != null ? fieldError.getDefaultMessage() : "invalid",
+                fieldError.getRejectedValue() != null ? fieldError.getRejectedValue() : "null",
+                fieldError.getCode() != null ? fieldError.getCode() : "unknown"
+            ))
+            .toList();
         
-        exception.getConstraintViolations().forEach(violation ->
-            errors.put(violation.getPropertyPath().toString(), violation.getMessage()));
-        return ResponseEntity.badRequest().body(errors);
+        ProblemDetail exBody = ex.getBody();
+        exBody.setProperty("errors", errors);
+        exBody.setDetail("Validation failed. One or more fields are invalid.");
+        
+        //No need to set body here since it's already set in the exception
+        return handleExceptionInternal(ex, null, headers, status, request);
     }
     
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handle(MethodArgumentNotValidException exception) {
-        Map<String, String> errors = new HashMap<>();
+    
+    @ExceptionHandler(ConstraintViolationException.class)
+    @Nullable
+    public ResponseEntity<Object> handleConstraintViolation(ConstraintViolationException ex, WebRequest request) {
+        List<ValidationError> errors = ex.getConstraintViolations().stream()
+            .sorted(Comparator.comparing(violation -> violation.getPropertyPath().toString().toLowerCase()))
+            .map(violation -> new ValidationError(
+                violation.getPropertyPath().toString(),
+                violation.getMessage(),
+                violation.getInvalidValue(),
+                violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName()
+            ))
+            .toList();
         
-        exception.getBindingResult().getFieldErrors().forEach(error ->
-            errors.put(error.getField(), error.getDefaultMessage()));
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        ProblemDetail body = createProblemDetail(
+            ex, status, "Validation failed. One or more properties are invalid.",
+            null, null, request);
+        body.setProperty("errors", errors);
         
-        return ResponseEntity.badRequest().body(errors);
+        return handleExceptionInternal(ex, body, new HttpHeaders(), status, request);
     }
     
     @ExceptionHandler(DuplicateKeyException.class)
-    public ResponseEntity<Map<String, String>> handle(DuplicateKeyException exception) {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-            .body(Map.of("error", exception.getMessage()));
-    }
-    
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<String> handle() {
-        return ResponseEntity.badRequest().body("Malformed JSON request");
+    @Nullable
+    public ResponseEntity<Object> handleDuplicateKey(DuplicateKeyException ex, WebRequest request) {
+        HttpStatus status = HttpStatus.CONFLICT;
+        ProblemDetail body = createProblemDetail(
+            ex, status, "A resource with the same key already exists.",
+            null, null, request);
+        
+        return handleExceptionInternal(ex, body, new HttpHeaders(), status, request);
     }
     
     @ExceptionHandler(DuplicateEmailException.class)
-    public ResponseEntity<Map<String, String>> handle(DuplicateEmailException exception) {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-            .body(Map.of("error", exception.getMessage()));
+    @Nullable
+    public ResponseEntity<Object> handleDuplicateEmail(DuplicateEmailException ex, WebRequest request) {
+        HttpStatus status = HttpStatus.CONFLICT;
+        ProblemDetail body = createProblemDetail(
+            ex, status, ex.getMessage(),
+            null, null, request);
+        
+        return handleExceptionInternal(ex, body, new HttpHeaders(), status, request);
     }
     
     // Catch all for any other exceptions for development purposes
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handle(Exception exception) throws Exception {
+    @Nullable
+    public ResponseEntity<Object> handleOtherException(Exception ex, WebRequest request) throws Exception {
         // Don't handle Spring Security exceptions here because this method catches them first,
         // and they are handled by the SecurityConfig class
-        if(exception.getClass().getPackageName().startsWith("org.springframework.security")) {
-            throw exception;
+        if(ex.getClass().getPackageName().startsWith("org.springframework.security")) {
+            throw ex;
         }
         
-        return ResponseEntity.internalServerError().body("An unexpected error occurred");
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+        ProblemDetail body = createProblemDetail(
+            ex, status, "An unexpected error occurred.",
+            null, null, request);
+        
+        return handleExceptionInternal(ex, body, new HttpHeaders(), status, request);
     }
 }
