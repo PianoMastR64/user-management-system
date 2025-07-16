@@ -4,6 +4,7 @@ import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.*;
 import org.springframework.lang.Nullable;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -76,6 +77,17 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @Nullable
     public ResponseEntity<Object> handleDuplicateEmail(DuplicateEmailException ex, WebRequest request) {
         HttpStatus status = HttpStatus.CONFLICT;
+        ProblemDetail body = createProblemDetail(
+            ex, status, ex.getMessage(),
+            null, null, request);
+        
+        return handleExceptionInternal(ex, body, new HttpHeaders(), status, request);
+    }
+    
+    @ExceptionHandler(BadCredentialsException.class)
+    @Nullable
+    public ResponseEntity<Object> handleBadCredentials(BadCredentialsException ex, WebRequest request) {
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
         ProblemDetail body = createProblemDetail(
             ex, status, ex.getMessage(),
             null, null, request);
