@@ -1,10 +1,10 @@
 package com.pianomastr64.usermanagement.auth;
 
+import com.pianomastr64.usermanagement.exception.DuplicateEmailException;
 import com.pianomastr64.usermanagement.user.UserMapper;
 import com.pianomastr64.usermanagement.user.User;
 import com.pianomastr64.usermanagement.user.UserRepository;
 import com.pianomastr64.usermanagement.security.JwtUtil;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -36,7 +36,7 @@ public class AuthService {
     
     public String register(RegisterRequest request) {
         if (repo.existsByEmail(request.email())) {
-            throw new DuplicateKeyException("Email already in use");
+            throw new DuplicateEmailException("Email already registered");
         }
         
         User user = mapper.createFromDto(request, passwordEncoder);
