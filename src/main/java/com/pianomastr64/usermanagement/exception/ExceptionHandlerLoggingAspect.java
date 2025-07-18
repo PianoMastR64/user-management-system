@@ -23,7 +23,7 @@ public class ExceptionHandlerLoggingAspect {
     private static final Logger logger = LoggerFactory.getLogger(ExceptionHandlerLoggingAspect.class);
     UserRepository userRepository;
     
-    @Pointcut("target(com.pianomastr64.usermanagement.exception.GlobalExceptionHandler) && execution(* handle*(..))")
+    @Pointcut("target(GlobalExceptionHandler) && execution(* handle*(..))")
     public void exceptionHandlerMethods() {}
     
     public ExceptionHandlerLoggingAspect(UserRepository userRepository) {
