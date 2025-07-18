@@ -23,12 +23,12 @@ public class ExceptionHandlerLoggingAspect {
     private static final Logger logger = LoggerFactory.getLogger(ExceptionHandlerLoggingAspect.class);
     UserRepository userRepository;
     
-    @Pointcut("target(GlobalExceptionHandler) && execution(* handle*(..))")
-    public void exceptionHandlerMethods() {}
-    
     public ExceptionHandlerLoggingAspect(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
+    
+    @Pointcut("target(GlobalExceptionHandler) && execution(* handle*(..))")
+    public void exceptionHandlerMethods() {}
     
     @AfterReturning(pointcut = "exceptionHandlerMethods()", returning = "result")
     public void logAfterExceptionHandler(JoinPoint joinPoint, Object result) {
