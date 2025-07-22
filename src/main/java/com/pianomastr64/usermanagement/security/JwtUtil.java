@@ -4,6 +4,8 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
@@ -14,6 +16,8 @@ import java.util.Date;
 
 @Component
 public class JwtUtil {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JwtUtil.class);
+    
     private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 24; // 1 day in milliseconds
     
     private final SecretKey key;
@@ -31,8 +35,7 @@ public class JwtUtil {
                 throw new IllegalStateException("JWT secret must be set in production.");
             }
             
-            System.out.println("Warning: Using default development JWT secret key. " +
-                "Please set a secure key in production.");
+            LOGGER.warn("Using default development JWT secret key. Please set a secure key in production.");
         }
         
         
