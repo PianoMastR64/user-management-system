@@ -50,8 +50,17 @@ public class UserServiceImpl implements UserService {
             .map(mapper::toDTO);
     }
     
+    // Artificially choppy to make grafana dashboard and alerting more interesting
+    private static final Random RANDOM = new Random();
     @Override
     public List<UserDTO> getAllUsers() {
+        if(RANDOM.nextInt(3) == 0) {
+            try {
+                Thread.sleep(RANDOM.nextInt(600, 4000)); // sleep between 1000 and 2000 ms
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
         return repo.findAll().stream()
             .map(mapper::toDTO)
             .toList();
