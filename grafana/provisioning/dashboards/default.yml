@@ -1,0 +1,9 @@
+apiVersion: 1
+
+providers:
+  - name: 'Local JSON'
+    folder: 'Spring Boot'
+    type: file
+    allowUiUpdates: false
+    options:
+      path: /etc/grafana/provisioning/dashboards

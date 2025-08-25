@@ -1,0 +1,9 @@
+apiVersion: 1
+contactPoints:
+  - orgId: 1
+    name: oncall-email
+    receivers:
+      - uid: email-default
+        type: email
+        settings:
+          addresses: example@gmail.com
