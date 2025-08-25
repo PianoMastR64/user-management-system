@@ -43,11 +43,13 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/login", "/auth/register", "/h2-console/**").permitAll()
                 .requestMatchers(SWAGGER_ENDPOINTS).permitAll() //disabled in prod profile
+                .requestMatchers("/actuator/**").permitAll()
                 // TODO add /admin/ endpoints in the future
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/users/**").authenticated()
                 .anyRequest().denyAll()
             )
+            //TODO: redirect to some page if not authenticated or access denied
             .exceptionHandling(exception -> exception
                 .authenticationEntryPoint((request, response, authException) ->
                     ErrorResponseUtil.writeJsonError(
