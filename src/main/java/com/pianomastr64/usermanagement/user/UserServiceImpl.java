@@ -1,12 +1,14 @@
 package com.pianomastr64.usermanagement.user;
 
 import com.pianomastr64.usermanagement.exception.DuplicateEmailException;
+import io.micrometer.core.annotation.Timed;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Timed(value = "user.service.method.time")
 @Service
 public class UserServiceImpl implements UserService {
     private final UserRepository repo;
